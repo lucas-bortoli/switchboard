@@ -1,34 +1,14 @@
 #include "commands.h"
 #include "context.h"
 #include "railroad/transport.h"
+#include "utils.h"
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
-#include <iostream>
 #include <readline/history.h>
 #include <readline/readline.h>
-#include <sstream>
 #include <string>
 #include <vector>
-
-// Divide uma string em partes separadas por um caractere delimitador.
-// Fonte: https://stackoverflow.com/a/46931770
-// Modificado para excluir itens vazios.
-std::vector<std::string> split_by_char(const std::string& s, char delim)
-{
-    std::vector<std::string> result;
-    std::stringstream ss(s);
-    std::string item;
-
-    while (getline(ss, item, delim))
-    {
-        if (item.size() < 1)
-            continue;
-        result.push_back(item);
-    }
-
-    return result;
-}
 
 Context* context;
 
@@ -44,9 +24,13 @@ int main(int argc, char** argv)
     {
         std::string prompt = "Switchboard $ ";
         if (context->server.has_value())
-            prompt = "[servidor aberto  ] " + prompt;
+        {
+            auto clientCount = context->server.value()->clients.size();
+            prompt = "[servidor: " + std::to_string(clientCount) +
+                     plural(clientCount, " cliente conectado", " clientes conectados") + "] " + prompt;
+        }
         if (context->clientHandle.has_value())
-            prompt = "[conexão remota ok] " + prompt;
+            prompt = "[cliente: conectado] " + prompt;
 
         char* buf = readline(prompt.c_str());
 
@@ -109,7 +93,7 @@ int main(int argc, char** argv)
         {
             if (tokens.size() != 2)
             {
-                printf("Uso: download [arquivo]\n");
+                printf("Uso: upload [arquivo]\n");
                 continue;
             }
 

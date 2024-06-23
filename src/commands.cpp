@@ -1,6 +1,8 @@
 #include "commands.h"
 #include "context.h"
 
+using namespace std::chrono_literals;
+
 bool check_if_client_is_connected()
 {
     if (!context->clientHandle.has_value())
@@ -14,12 +16,18 @@ bool check_if_client_is_connected()
 
 void cmd_hospedar(const std::string& hostname, unsigned short port)
 {
-    fprintf(stderr, "cmd_hospedar: não implementado\n");
+    printf("Iniciando servidor em %s:%d...\n", hostname.c_str(), port);
+    context->startServer(hostname, port);
+    std::this_thread::sleep_for(300ms); // delay proposital (não há race conditions)
+    printf("Servidor iniciado.\n");
 }
 
 void cmd_conectar(const std::string& hostname, unsigned short port)
 {
-    fprintf(stderr, "cmd_conectar: não implementado\n");
+    printf("Conectando ao servidor %s:%d...\n", hostname.c_str(), port);
+    context->connectClient(hostname, port);
+    std::this_thread::sleep_for(300ms); // delay proposital (não há race conditions)
+    printf("Conectado.\n");             // TODO verificar se conectou realmente
 }
 
 void cmd_download(const std::string& filename)
