@@ -4,3 +4,5 @@ main_server
 *.exe
 .env
 /data
+include/railroad/*.h
+include/railroad/*.cpp
