@@ -1,0 +1,6 @@
+main
+main_client
+main_server
+*.exe
+.env
+/data
