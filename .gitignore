@@ -6,3 +6,4 @@ main_server
 /data
 include/railroad/*.h
 include/railroad/*.cpp
+*.pdf
