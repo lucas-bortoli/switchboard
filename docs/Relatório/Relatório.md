@@ -50,7 +50,7 @@ Com base nesses requisitos, dividimos o projeto em duas etapas:
 1. O desenvolvimento da biblioteca/protocolo Railroad, que é responsável pela comunicação baixo nível entre o cliente e o servidor;
 2. A aplicação Switchboard, que utiliza a biblioteca Railroad para realizar a transferência de arquivos.
 
-## 2 Componentes do projeto
+## 2 Desenvolvimento -- Componentes do projeto
 
 ### 2.1 A biblioteca Railroad
 
@@ -235,3 +235,15 @@ Dessa forma, o handshake no Railroad possui apenas dois componentes, o SYN e o A
 Outra diferença, e talvez a mais gritante, é que o TCP é um protocolo de conexão orientado a fluxo (stream-oriented), enquanto o Railroad é um protocolo de pacotes. No TCP, é possível enviar um fluxo de dados contínuo, e o protocolo é responsável por segmentar esse fluxo em pacotes. No Railroad, é dever do usuário enviar pacotes individualmente.
 
 Ter a noção de pacotes individuais em vez de um fluxo contínuo pode ser mais vantajoso em alguns cenários, já que muitas vezes, protocolos feitos em cima do TCP acabam implementando pacotes sobre o próprio TCP, descartando o conceito de fluxo contínuo. Um exemplo disso é o protocolo WebSocket, que utiliza o HTTP como transporte, mas também é um protocolo orientado a pacotes.
+
+## 4 Metodologia de testes
+
+Para validar o comportamento do Railroad e verificar se ele realmente implementa os requisitos solicitados para o projeto, foi elaborada uma metodologia de testes. Em um ambiente Windows, foi criado um servidor que aceita conexões de clientes. Além disso, foi instalado a aplicação "clumsy", que intercepta pacotes de rede no computador, adicionando latência/queda de pacotes/corrupção/duplicação de pacotes/ordenação incorreta de forma artificial e controlada.
+
+![Interface do clumsy, com as opções de lag/drop/throttle/duplicate/out of order ativas](./InterfaceClumsy.png)
+
+Usando o clumsy com as configurações acima, é possível observar o sistema de retransmissão e ordenamento de pacotes:
+
+![Teste de retransmissão e ordenamento de pacotes](./Teste01ComClumsy.png)
+
+Nesse teste, o terminal da esquerda representa um servidor enviando pacotes continuamente ao cliente da direita. É possível observar que, segundo os logs do servidor, o pacote de SYN foi transmitido duas vezes pelo cliente, pois ele não recebeu o ACK de resposta do servidor. Na segunda tentativa, o handshake foi concluído. Além disso, os logs do cliente indicam que o servidor retransmitiu o pacote com sequência #2 diversas vezes, por perder o ACK de resposta do cliente. Por fim, o cliente determina que o próximo pacote terá sequência #7, mas continuou recebendo pacotes #6, descartando-os.
