@@ -1,5 +1,6 @@
 #include "commands.h"
 #include "context.h"
+#include "fs.h"
 #include "railroad/transport.h"
 #include "utils.h"
 #include <algorithm>
@@ -8,14 +9,17 @@
 #include <readline/history.h>
 #include <readline/readline.h>
 #include <string>
+#include <unistd.h>
 #include <vector>
 
 Context* context;
 
 int main(int argc, char** argv)
 {
+    auto workingDirectory = get_working_directory();
+
     context = new Context();
-    context->localDirectory = std::string("./data");
+    context->localDirectory = workingDirectory + "/data";
 
     printf("Seja bem-vindo! Você pode fechar o programa apertando Ctrl+C em qualquer momento...\n\n");
     cmd_ajuda();

@@ -1,5 +1,7 @@
 #include "commands.h"
 #include "context.h"
+#include "fs.h"
+#include "protocol.h"
 
 using namespace std::chrono_literals;
 
@@ -16,6 +18,12 @@ bool check_if_client_is_connected()
 
 void cmd_hospedar(const std::string& hostname, unsigned short port)
 {
+    if (context->server.has_value())
+    {
+        fprintf(stderr, "O servidor já está em execução.\n");
+        return;
+    }
+
     printf("Iniciando servidor em %s:%d...\n", hostname.c_str(), port);
     context->startServer(hostname, port);
     std::this_thread::sleep_for(300ms); // delay proposital (não há race conditions)
@@ -24,6 +32,12 @@ void cmd_hospedar(const std::string& hostname, unsigned short port)
 
 void cmd_conectar(const std::string& hostname, unsigned short port)
 {
+    if (context->clientHandle.has_value())
+    {
+        fprintf(stderr, "Já está conectado a um servidor.\n");
+        return;
+    }
+
     printf("Conectando ao servidor %s:%d...\n", hostname.c_str(), port);
     context->connectClient(hostname, port);
     std::this_thread::sleep_for(300ms); // delay proposital (não há race conditions)
@@ -51,12 +65,37 @@ void cmd_rlist()
     if (!check_if_client_is_connected())
         return;
 
-    fprintf(stderr, "cmd_rlist: não implementado\n");
+    printf("Listando diretório remoto...\n");
+
+    auto request = RemoteListRequest{.kind = ProtocolMessageKind::REMOTE_LIST_FOLDER_REQUEST};
+    rr_client_send(context->clientHandle.value(), (const char*)&request, sizeof(request));
+
+    RemoteListResponseStart res;
+    rr_client_receive(context->clientHandle.value(), (char*)&res, sizeof(res));
+
+    printf("(remoto) %s\n", res.remotePath);
+    for (size_t i = 0; i < res.itemCount; i++)
+    {
+        RemoteListResponseItem res;
+        rr_client_receive(context->clientHandle.value(), (char*)&res, sizeof(res));
+        printf("  %24s FILE %8zu bytes\n", res.name, res.size);
+    }
+
+    printf("%d itens\n", (int)res.itemCount);
 }
 
 void cmd_llist()
 {
-    fprintf(stderr, "cmd_llist: não implementado\n");
+    printf("Listando diretório local...\n");
+    auto items = get_directory_files(context->localDirectory);
+
+    printf("(local) %s\n", context->localDirectory.c_str());
+    for (auto item : items)
+    {
+        printf("  %24s FILE %8zu bytes\n", item.name.c_str(), item.size);
+    }
+
+    printf("%d itens\n", (int)items.size());
 }
 
 void cmd_ajuda()

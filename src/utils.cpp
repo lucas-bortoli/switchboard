@@ -2,6 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <unistd.h>
 #include <vector>
 
 std::string plural(int count, std::string unitSingular, std::string unitPlural)
