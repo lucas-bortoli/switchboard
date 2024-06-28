@@ -56,6 +56,7 @@
     "cstring": "cpp",
     "mutex": "cpp",
     "codecvt": "cpp",
-    "iomanip": "cpp"
+    "iomanip": "cpp",
+    "fstream": "cpp"
   }
 }

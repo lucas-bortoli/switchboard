@@ -12,11 +12,11 @@ void sb_server_client_thread_loop(rr_server_handle serverHandle, rr_sock_handle 
 
     while (true)
     {
-        char request[FRAME_BODY_LENGTH];
+        char frameBody[FRAME_BODY_LENGTH];
 
-        rr_server_receive(serverHandle, clientHandle, request, sizeof(request));
+        rr_server_receive(serverHandle, clientHandle, frameBody, sizeof(frameBody));
 
-        switch ((ProtocolMessageKind)request[0])
+        switch ((ProtocolMessageKind)frameBody[0])
         {
             case ProtocolMessageKind::REMOTE_LIST_FOLDER_REQUEST: {
                 printf("sb_server_client_thread_loop: enviando listagem para cliente\n");
@@ -37,8 +37,31 @@ void sb_server_client_thread_loop(rr_server_handle serverHandle, rr_sock_handle 
 
                 break;
             }
+            case ProtocolMessageKind::UPLOAD_REQUEST: {
+                printf("sb_server_client_thread_loop: recebendo arquivo\n");
+
+                UploadRequest request = *(UploadRequest*)&frameBody;
+
+                std::string targetFile = context->localDirectory + "/" + request.name;
+                FILE* fh = fopen(targetFile.c_str(), "wb");
+
+                size_t receivedBytes = 0;
+                for (size_t i = 0; i < request.chunkCount; i++)
+                {
+                    char blob[FRAME_BODY_LENGTH];
+                    size_t blobSize = rr_server_receive(serverHandle, clientHandle, blob, sizeof(blob));
+                    fwrite(blob, blobSize, 1, fh);
+                    receivedBytes += blobSize;
+                    printf("Recebido %zu / %zu bytes, chunk #%zu, tamanho chunk %zu\n", receivedBytes, request.size, i,
+                           blobSize);
+                }
+
+                fclose(fh);
+
+                break;
+            }
             default:
-                fprintf(stderr, "sb_server_client_thread_loop: mensagem com ID inválido: %d\n", request[0]);
+                fprintf(stderr, "sb_server_client_thread_loop: mensagem com ID inválido: %d\n", frameBody[0]);
                 break;
         }
 

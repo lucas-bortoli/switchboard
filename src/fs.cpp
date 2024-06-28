@@ -44,3 +44,18 @@ std::vector<File> get_directory_files(std::string directoryPath)
     closedir(dir);
     return files;
 }
+
+bool file_exists(const std::string& absPath)
+{
+    return access(absPath.c_str(), F_OK) == 0;
+}
+
+std::string basename(const std::string& absPath)
+{
+    size_t lastSlash = absPath.find_last_of("/\\");
+    if (lastSlash == std::string::npos)
+    {
+        return absPath; // No slash found, entire path is the base name
+    }
+    return absPath.substr(lastSlash + 1);
+}

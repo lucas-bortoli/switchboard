@@ -2,6 +2,8 @@
 #include "context.h"
 #include "fs.h"
 #include "protocol.h"
+#include <cstdio>
+#include <cstring>
 
 using namespace std::chrono_literals;
 
@@ -57,7 +59,49 @@ void cmd_upload(const std::string& filename)
     if (!check_if_client_is_connected())
         return;
 
-    fprintf(stderr, "cmd_upload: não implementado\n");
+    auto localPath = context->localDirectory + "/" + filename;
+
+    if (!file_exists(localPath))
+    {
+        fprintf(stderr, "Arquivo não existe.");
+        return;
+    }
+
+    std::string fileBasename = basename(filename);
+
+    FILE* fh = fopen(localPath.c_str(), "rb");
+
+    // Determinar o tamanho do arquivo movendo o ponteiro para o fim do arquivo, determinando o offset, e movendo para o
+    // começo https://stackoverflow.com/a/238607
+    fseek(fh, 0L, SEEK_END);
+    size_t fileSize = ftell(fh);
+    rewind(fh);
+
+    // Serão enviados tantos pacotes de dados
+    size_t chunkCount = (fileSize / FRAME_BODY_LENGTH) + 1;
+
+    auto request = UploadRequest{
+        .kind = ProtocolMessageKind::UPLOAD_REQUEST,
+        .size = fileSize,
+        .chunkCount = chunkCount,
+        .name = {0},
+    };
+    std::memcpy(request.name, fileBasename.c_str(), std::min(fileBasename.size(), sizeof(request.name)));
+    rr_client_send(context->clientHandle.value(), (const char*)&request, sizeof(request));
+
+    size_t sentBytes = 0;
+    for (size_t i = 0; i < chunkCount; i++)
+    {
+        char blob[FRAME_BODY_LENGTH];
+        size_t blobSize = fread(blob, 1, sizeof(blob), fh);
+
+        rr_client_send(context->clientHandle.value(), blob, blobSize);
+
+        sentBytes += blobSize;
+        printf("Enviando... %zu / %zu bytes, chunk #%zu, tamanho chunk %zu\n", sentBytes, fileSize, i, blobSize);
+    }
+
+    printf("Enviado.\n");
 }
 
 void cmd_rlist()
