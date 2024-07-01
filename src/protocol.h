@@ -6,8 +6,9 @@ enum class ProtocolMessageKind : uint8_t
     REMOTE_LIST_FOLDER_REQUEST,
     REMOTE_LIST_FOLDER_RESPONSE_START,
     REMOTE_LIST_FOLDER_RESPONSE_ITEM,
-    UPLOAD_REQUEST,
+    IMMINENT_FILE_TRANSFER,
     DOWNLOAD_REQUEST,
+    DOWNLOAD_RESPONSE_DENIED
 };
 
 struct __attribute__((packed)) RemoteListRequest
@@ -27,10 +28,22 @@ struct __attribute__((packed)) RemoteListResponseItem
     char name[128];
 };
 
-struct __attribute__((packed)) UploadRequest
+struct __attribute__((packed)) ImminentFileTransfer
 {
     ProtocolMessageKind kind;
     uint64_t size;
     uint64_t chunkCount;
     char name[128];
+};
+
+struct __attribute__((packed)) DownloadRequest
+{
+    ProtocolMessageKind kind;
+    char name[128];
+};
+
+struct __attribute__((packed)) DownloadResponseDenied
+{
+    ProtocolMessageKind kind;
+    char message[128];
 };

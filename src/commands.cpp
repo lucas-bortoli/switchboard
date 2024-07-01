@@ -51,7 +51,50 @@ void cmd_download(const std::string& filename)
     if (!check_if_client_is_connected())
         return;
 
-    fprintf(stderr, "cmd_download: não implementado\n");
+    auto localTargetPath = context->localDirectory + "/" + filename;
+
+    if (file_exists(localTargetPath))
+        fprintf(stderr, "Arquivo local já existe, será sobrescrito!");
+
+    std::string fileBasename = basename(localTargetPath);
+    DownloadRequest request = DownloadRequest{
+        .kind = ProtocolMessageKind::DOWNLOAD_REQUEST,
+        .name = {0},
+    };
+    std::memcpy(request.name, fileBasename.c_str(), std::min(fileBasename.size(), sizeof(request.name)));
+    rr_client_send(context->clientHandle.value(), (const char*)&request, sizeof(request));
+
+    char blob[FRAME_BODY_LENGTH];
+    size_t recvSize = rr_client_receive(context->clientHandle.value(), blob, sizeof(blob));
+
+    if ((ProtocolMessageKind)blob[0] == ProtocolMessageKind::DOWNLOAD_RESPONSE_DENIED)
+    {
+        DownloadResponseDenied resp;
+        std::memcpy(&resp, blob, recvSize);
+        fprintf(stderr, "O servidor rejeitou o download do arquivo: %s\n", resp.message);
+        return;
+    }
+
+    if ((ProtocolMessageKind)blob[0] == ProtocolMessageKind::IMMINENT_FILE_TRANSFER)
+    {
+        ImminentFileTransfer fileTransfer;
+        std::memcpy(&fileTransfer, blob, recvSize);
+
+        FILE* fh = fopen(localTargetPath.c_str(), "wb");
+
+        size_t receivedBytes = 0;
+        for (size_t i = 0; i < fileTransfer.chunkCount; i++)
+        {
+            recvSize = rr_client_receive(context->clientHandle.value(), blob, sizeof(blob));
+            receivedBytes += recvSize;
+            printf("Recebendo... %zu / %zu bytes, chunk #%zu, tamanho chunk %zu\n", receivedBytes, fileTransfer.size, i,
+                   recvSize);
+
+            fwrite(blob, recvSize, 1, fh);
+        }
+
+        fclose(fh);
+    }
 }
 
 void cmd_upload(const std::string& filename)
@@ -82,8 +125,8 @@ void cmd_upload(const std::string& filename)
 
     // Enviar mensagem falando que há uma transmissão iminente, de forma que todos os quadros serão fragmentos dos
     // arquivos
-    auto request = UploadRequest{
-        .kind = ProtocolMessageKind::UPLOAD_REQUEST,
+    auto request = ImminentFileTransfer{
+        .kind = ProtocolMessageKind::IMMINENT_FILE_TRANSFER,
         .size = fileSize,
         .chunkCount = chunkCount,
         .name = {0},
@@ -102,6 +145,8 @@ void cmd_upload(const std::string& filename)
         sentBytes += blobSize;
         printf("Enviando... %zu / %zu bytes, chunk #%zu, tamanho chunk %zu\n", sentBytes, fileSize, i, blobSize);
     }
+
+    fclose(fh);
 
     printf("Enviado.\n");
 }
