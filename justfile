@@ -14,4 +14,4 @@ run: build
   ./main.exe
 
 docs:
-  pandoc --toc --resource-path="docs/Relatório" docs/Relatório/Relatório.md -o Relatório.pdf
+  pandoc --toc -H docs/Relatório/disable_float.tex --resource-path="docs/Relatório" docs/Relatório/Relatório.md -o Relatório.pdf

@@ -224,7 +224,13 @@ int main(int argc, char** argv)
 
 Essa aplicação estabelece uma conexão com o servidor e envia um quadro DATA "Hello From Client". Em seguida, recebe a resposta do servidor e imprime o conteúdo recebido. Esse ciclo ocorre de maneira infinita.
 
-### 3.3 Railroad vs. TCP
+### 3.3 Fluxogramas de recepção de pacotes
+
+![Árvore de decisão tomada ao receber um quadro no servidor](RecepçãoServidor.drawio.png)
+
+![Árvore de decisão tomada ao receber um quadro no cliente](RecepçãoCliente.drawio.png)
+
+### 3.4 Railroad vs. TCP
 
 O protocolo Railroad é inspirado no TCP, mas há algumas diferenças importantes entre eles. Primeiramente, o protocolo Railroad foi implementado como uma biblioteca que utiliza sockets UDP como meio de transmissão de dados, enquanto o TCP utiliza sua própria implementação dentro do kernel sobre IP. Assim, Railroad não é um protocolo de rede em si, mas sim uma camada de aplicação que utiliza sockets UDP.
 
@@ -247,3 +253,13 @@ Usando o clumsy com as configurações acima, é possível observar o sistema de
 ![Teste de retransmissão e ordenamento de pacotes](./Teste01ComClumsy.png)
 
 Nesse teste, o terminal da esquerda representa um servidor enviando pacotes continuamente ao cliente da direita. É possível observar que, segundo os logs do servidor, o pacote de SYN foi transmitido duas vezes pelo cliente, pois ele não recebeu o ACK de resposta do servidor. Na segunda tentativa, o handshake foi concluído. Além disso, os logs do cliente indicam que o servidor retransmitiu o pacote com sequência #2 diversas vezes, por perder o ACK de resposta do cliente. Por fim, o cliente determina que o próximo pacote terá sequência #7, mas continuou recebendo pacotes #6, descartando-os.
+
+### 4.1 Testes em bancada
+
+Para testes práticos, foi montada uma bancada contendo o seguinte hardware:
+
+1. Um computador Lenovo 300e, com Linux instalado;
+2. Um smartphone Samsung Galaxy S7, com Android versão 10, usando o aplicativo Termux para emulação de terminal;
+3. Um roteador wireless 300 Mbps TP-LINK TL-WR941ND, configurado para criar um access point local.
+
+Na bancada, o computador e o smartphone estão configurados para conexão ao access point por meio de Wi-Fi, sem rede cabeada. O aplicativo Termux está com um ambiente chroot baseado no Ubuntu 22.04 LTS, permitindo a execução do programa Switchboard no telefone de forma transparente.

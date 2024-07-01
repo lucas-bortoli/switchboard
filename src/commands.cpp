@@ -80,6 +80,8 @@ void cmd_upload(const std::string& filename)
     // Serão enviados tantos pacotes de dados
     size_t chunkCount = (fileSize / FRAME_BODY_LENGTH) + 1;
 
+    // Enviar mensagem falando que há uma transmissão iminente, de forma que todos os quadros serão fragmentos dos
+    // arquivos
     auto request = UploadRequest{
         .kind = ProtocolMessageKind::UPLOAD_REQUEST,
         .size = fileSize,
