@@ -54,7 +54,7 @@ void cmd_download(const std::string& filename)
     auto localTargetPath = context->localDirectory + "/" + filename;
 
     if (file_exists(localTargetPath))
-        fprintf(stderr, "Arquivo local já existe, será sobrescrito!");
+        fprintf(stderr, "Arquivo local já existe, será sobrescrito!\n");
 
     std::string fileBasename = basename(localTargetPath);
     DownloadRequest request = DownloadRequest{
@@ -77,6 +77,8 @@ void cmd_download(const std::string& filename)
 
     if ((ProtocolMessageKind)blob[0] == ProtocolMessageKind::IMMINENT_FILE_TRANSFER)
     {
+        auto startTime = std::chrono::steady_clock::now();
+
         ImminentFileTransfer fileTransfer;
         std::memcpy(&fileTransfer, blob, recvSize);
 
@@ -94,6 +96,19 @@ void cmd_download(const std::string& filename)
         }
 
         fclose(fh);
+
+        auto endTime = std::chrono::steady_clock::now();
+
+        // Diferença de tempo entre início e final
+        auto elapsed = endTime - startTime;
+        auto elapsed_seconds = std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
+
+        int hours = elapsed_seconds / 3600;
+        elapsed_seconds %= 3600;
+        int minutes = elapsed_seconds / 60;
+        int seconds = elapsed_seconds % 60;
+
+        printf("Transferência levou %d horas, %d minutos e %d segundos.\n", hours, minutes, seconds);
     }
 }
 
@@ -134,6 +149,8 @@ void cmd_upload(const std::string& filename)
     std::memcpy(request.name, fileBasename.c_str(), std::min(fileBasename.size(), sizeof(request.name)));
     rr_client_send(context->clientHandle.value(), (const char*)&request, sizeof(request));
 
+    auto startTime = std::chrono::steady_clock::now();
+
     size_t sentBytes = 0;
     for (size_t i = 0; i < chunkCount; i++)
     {
@@ -148,7 +165,18 @@ void cmd_upload(const std::string& filename)
 
     fclose(fh);
 
-    printf("Enviado.\n");
+    auto endTime = std::chrono::steady_clock::now();
+
+    // Diferença de tempo entre início e final
+    auto elapsed = endTime - startTime;
+    auto elapsed_seconds = std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
+
+    int hours = elapsed_seconds / 3600;
+    elapsed_seconds %= 3600;
+    int minutes = elapsed_seconds / 60;
+    int seconds = elapsed_seconds % 60;
+
+    printf("Transferência levou %d horas, %d minutos e %d segundos.\n", hours, minutes, seconds);
 }
 
 void cmd_rlist()
