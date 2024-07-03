@@ -89,8 +89,9 @@ void cmd_download(const std::string& filename)
         {
             recvSize = rr_client_receive(context->clientHandle.value(), blob, sizeof(blob));
             receivedBytes += recvSize;
-            printf("Recebendo... %zu / %zu bytes, chunk #%zu, tamanho chunk %zu\n", receivedBytes, fileTransfer.size, i,
-                   recvSize);
+
+            double progress = ((double)receivedBytes / fileTransfer.size) * 100;
+            printf("Recebendo... %zu / %zu bytes, chunk #%zu, %.2f%%\n", receivedBytes, fileTransfer.size, i, progress);
 
             fwrite(blob, recvSize, 1, fh);
         }
@@ -160,7 +161,9 @@ void cmd_upload(const std::string& filename)
         rr_client_send(context->clientHandle.value(), blob, blobSize);
 
         sentBytes += blobSize;
-        printf("Enviando... %zu / %zu bytes, chunk #%zu, tamanho chunk %zu\n", sentBytes, fileSize, i, blobSize);
+
+        double progress = ((double)sentBytes / fileSize) * 100;
+        printf("Enviando... %zu / %zu bytes, chunk #%zu, %.2f%%\n", sentBytes, fileSize, i, progress);
     }
 
     fclose(fh);

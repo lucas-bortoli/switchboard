@@ -115,8 +115,9 @@ void sb_server_client_thread_loop(rr_server_handle serverHandle, rr_sock_handle 
                     rr_server_send(serverHandle, clientHandle, blob, blobSize);
 
                     sentBytes += blobSize;
-                    printf("Enviando... %zu / %zu bytes, chunk #%zu, tamanho chunk %zu\n", sentBytes, fileSize, i,
-                           blobSize);
+
+                    double progress = ((double)sentBytes / fileSize) * 100;
+                    printf("Enviando... %zu / %zu bytes, chunk #%zu, %.2f%%\n", sentBytes, fileSize, i, progress);
                 }
 
                 printf("Enviado.\n");

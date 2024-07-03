@@ -57,6 +57,10 @@
     "mutex": "cpp",
     "codecvt": "cpp",
     "iomanip": "cpp",
-    "fstream": "cpp"
+    "fstream": "cpp",
+    "cerrno": "cpp",
+    "climits": "cpp",
+    "ios": "cpp",
+    "queue": "cpp"
   }
 }
