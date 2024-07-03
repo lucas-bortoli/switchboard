@@ -259,10 +259,12 @@ Nesse teste, o terminal da esquerda representa um servidor enviando pacotes cont
 Para testes práticos, foi montada uma bancada contendo o seguinte hardware:
 
 1. Um computador Lenovo 300e, com Linux instalado, atuando como servidor;
-2. Um computador HP, com Windows 10, atuando como cliente;
+2. Um computador com NIC Realtek PCIE GBe, com Windows 11, atuando como cliente;
 3. Um roteador wireless 300 Mbps TP-LINK TL-WR941ND, configurado para criar um access point local com DHCP.
 
-Na bancada, ambos computadores estão configurados para conexão ao access point por meio de Wi-Fi, sem rede cabeada.
+![Ambiente de testes para o projeto](./AmbienteDeTestes.png)
+
+Na bancada, o computador servidor es estão configurados para conexão ao access point por meio de Wi-Fi, e o computador desktop cliente está configurado para conexão cabeada.
 
 Durante o teste, foram usadas as duas versões do protocolo Railroad: aquela que utiliza a estratégia de Stop-and-Wait (versão 1) e aquela que utiliza a estratégia de Sliding Window (versão 2). Na metodologia de Sliding Window, o software está configurado para permitir até 64 pacotes de dados na fila de transmissão, e 8 pacotes na janela deslizante. Em ambos os casos, os pacotes são retransmitidos se não forem confirmados em até 500 ms.
 
@@ -274,12 +276,27 @@ dd if=/dev/urandom of=1GB.bin bs=1M count=1024
 
 Após a criação do arquivo, foi requisitado, no cliente, o download do arquivo.
 
-Observa-se que, para 1 GB de dados, o tempo de download foi de 24 minutos e 30 segundos na versão 1, e de 15 minutos e 22 segundos na versão 2. Esse tempo é informado pelo cliente após finalizar a transferência. Respectivamente, a taxa de transferência média foi de aproximadamente 0,69 MB/s e 1,2 MB/s.
+Observa-se que, para 1 GB de dados, o tempo de download foi de 46 minutos e 57 segundos na versão de Sliding Window, e de 1 hora, 11 minutos e 45 segundos na versão Stop-and-Wait. Esse tempo é informado pelo cliente após finalizar a transferência. Respectivamente, a taxa de transferência média foi de aproximadamente 372 KB/s e 243 KB/s.
+
+|                       | Sliding Window | Stop-and-Wait  |
+|-----------------------|----------------|----------------|
+| Bytes transferidos    | 1073741824     | 1073741824     |
+| Tempo total           | 46 min, 57s    | 1h, 11min, 45s |
+| Taxa de transferência | 372 KB/s       | 243 KB/s       |
 
 Além disso, para garantir a integridade do arquivo recebido, foi calculada a hash MD5 do arquivo antes e depois da transferência, e comparada. Foram verificados que as hash são iguais, comprovando que o arquivo foi recebido corretamente.
 
-![Teste de download de 1GB com o Railroad versão 1](./Teste01Download1GBVersao1.png){ width=50% }
+![Checksum do arquivo no servidor](./IntegridadeArquivosServidor.png)
 
-![Teste de download de 1GB com o Railroad versão 2](./Teste01Download1GBVersao2.png){ width=50% }
+![Integridade do arquivo após a transferência via Sliding Window](./SlidingWindow_ClienteTransferenciaDownloadTerminado.png)
 
-![Verificação da integridade do arquivo de 1GB](./Teste01VerificacaoIntegridade1GB.png){ width=50% }
+## 5 Conclusão
+
+Com base nos testes realizados, conclui-se que o protocolo Railroad atendeu às exigências do projeto, com um comportamento adequado e consistente. Além disso, a aplicação Switchboard foi implementado com sucesso, permitindo a transferência de arquivos entre cliente e servidor.
+
+## 6 Referências
+
+- TCP/IP Illustrated, Vol. 1: The Protocols 1st Edition (W. Richard Stevens) -- capítulo 17 (TCP: Transmission Control Protocol), capítulo 18 (TCP Connection Establishment and Termination), capítulo 21 (TCP Timeout and Retransmission)
+- https://en.cppreference.com: referências da linguagem de programação C++ e sua biblioteca padrão, usada principalmente para estudo dos conceitos de threading (`std::thread`, `std::mutex`)
+- https://stackoverflow.com/a/8752870
+- https://stackoverflow.com/a/44896326
