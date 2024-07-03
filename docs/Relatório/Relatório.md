@@ -1,37 +1,4 @@
-Desenvolvimento de envio de arquivo via Socket UDP.
-Objetivo do Projeto: Desenvolver um sistema de transferência de arquivos utilizando sockets UDP, com implementação de mecanismos para garantir a ordenação dos pacotes e a retransmissão dos pacotes perdidos, a fim de assegurar a integridade dos dados recebidos.
-
-Servidor deverá ter 3 funcionalidades:
-
-1. Receber e armazenar em uma pasta os arquivos de enviados por todos os clientes.
-2. Enviar lista de arquivos da pasta quando solicitado pelo cliente.
-3. Transmitir um arquivo da pasta quando solicitado pelo cliente.
-
-Cliente deverá ter 3 funcionalidades:
-1. Selecionar um arquivo local e transmitir para o servidor.
-2. Visualizar os arquivos da pasta.
-3. Solicitar e fazer download de um arquivo da pasta.
-
-Deve garantir ordenação dos datagramas e retransmissão de datagramas perdidos. IMPLEMENTAR ORDENAÇÃO E RETRANSMISSÃO DE DATAGRAMA PERDIDO. NÃO DEVE USAR IMPLEMENTAÇÕES PRONTAS.
-Passo a passo detalhado para a realização da atividade:
-1. Estudo: Antes de começar o desenvolvimento, os alunos devem dedicar um tempo ao estudo dos conceitos necessários para a realização do projeto. Isso inclui o entendimento socket UDP, as funcionalidades do módulo socket e o modelo cliente-servidor na linguagem escolhida.
-2. Desenho da arquitetura: No início do projeto, os alunos devem desenhar a arquitetura da aplicação, definindo como o cliente e o servidor irão interagir. Desenvolver um fluxograma da lógica criada e colocar no relatório.
-3. Implementação do Servidor: Os alunos irão começar a implementação pelo servidor, usando sockets UDP. O servidor deverá ser capaz de aceitar várias conexões em paralelo (multithreading).
-4. Implementação do Cliente: em seguida, os alunos irão implementar o cliente, que também utilizará sockets UDP. Os clientes deverão ser capazes de solicitar a lista de arquivos, realizar download do arquivo desejado e enviar um arquivo para o servidor.
-5. Testes: após a implementação, os alunos irão testar a aplicação, simulando um cenário real de uso. Testar comunicação em na mesma LAN, use os comutadores do SENAI.
-6. Documentação: os alunos irão documentar todo o desenvolvimento, explicando as decisões tomadas, como o projeto evoluiu, quais problemas surgiram e como foram resolvidos, entre outras informações importantes.
-
-A documentação seguirá o seguinte formato:
-1. Introdução: Apresente o tema UDP e Socket e suas características.
-2. Desenvolvimento: Detalhe o trajeto do grupo durante a realização do projeto, o percurso de aprendizado, as principais dificuldades encontradas e como foram superadas. Explicite bem as tecnologias utilizadas e por quê foram escolhidas. Aqui, os alunos também precisam apresentar um fluxograma da estratégia adotada, bem como a implementação e os resultados dos testes.
-3. Conclusão: Mostre a participação de cada membro no projeto. Os alunos devem retomar os principais pontos do trabalho, mostrar os resultados alcançados e os aprendizados adquiridos durante o projeto. Destaque o que deu certo e o que poderia ser melhorado em projetos futuros.
-4. Bibliografia: Liste todas as fontes de onde você extraiu informações pertinentes ao projeto, incluindo livros, vídeos, sites e etc.
-
----------------------------
-
-Início da Documentação
-
-# Uma aplicação simples de transferência de arquivos
+# Switchboard: Uma aplicação simples de transferência de arquivos
 
 ## 1. Introdução
 
@@ -106,11 +73,15 @@ No protocolo, existem três tipos fundamentais de quadro:
 
 Cada remetente possui um identificador incremental de transmissão, onde cada quadro SYN/DATA enviado possui um campo "seq" que indica o número sequencial do quadro. No entanto, é preciso ressaltar que os quadros ACK enviados possuem exclusivamente o mesmo identificador do quadro ao qual estão respondendo. Por exemplo, se o cliente envia o quadro DATA com identificador 60, o servidor responde com um ACK com o mesmo identificador 60. O próximo quadro DATA enviado pelo cliente possuirá, então, o identificador 61. A mesma lógica se aplica à transmissão de dados pelo servidor.
 
-![Fluxo de dados do cliente ao servidor](./FluxoDados1.png){ width=50% }
+![Fluxo de dados do cliente ao servidor, demonstrando a numeração dos pacotes, na metodologia Stop-and-Wait](./FluxoDados1.png){ width=50% }
 
 Para estabelecer a conexão, o cliente envia um quadro SYN com identificador 1. O servidor responde com um ACK com o mesmo identificador. A partir desse ponto, ambos as partes podem enviar quadros DATA. O cliente pode enviar um quadro DATA com identificador 2 e o servidor responde com ACK com o mesmo identificador, ou o servidor pode enviar, por exemplo, um quadro DATA com identificador 1 (já que é a primeira transmissão do servidor nessa conexão) e o cliente responde com ACK de sequência 1.
 
 Caso o remetente não receba o ACK correspondente dentro do tempo limite máximo (timeout), ele retransmite o quadro com o mesmo identificador. Se o ACK for recebido, o remetente marcará aquele quadro como transmitido e o removerá da fila de transmissão.
+
+![Fluxo de dados do cliente ao servidor, demonstrando a numeração dos pacotes, na metodologia Sliding Window, com janela de tamanho 3](./FluxoDadosSlidingWindow.png){ width=50% }
+
+Como representado na figura, na metodologia Sliding Window com janela de tamanho 3, o remetente enviará até 3 pacotes de forma simultânea, sem garantia de ordem qualquer. Dessa forma, cabe ao destinatário ordenar os pacotes com base no número de sequência incremental dos mesmos, descartando pacotes duplicados e enfileirando pacotes futuros (aqueles que tem um identificador maior do que o "próximo pacote", do ponto de vista do destinatário).
 
 ### 3.1 Funcionamento do servidor
 
