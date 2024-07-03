@@ -258,8 +258,28 @@ Nesse teste, o terminal da esquerda representa um servidor enviando pacotes cont
 
 Para testes práticos, foi montada uma bancada contendo o seguinte hardware:
 
-1. Um computador Lenovo 300e, com Linux instalado;
-2. Um smartphone Samsung Galaxy S7, com Android versão 10, usando o aplicativo Termux para emulação de terminal;
-3. Um roteador wireless 300 Mbps TP-LINK TL-WR941ND, configurado para criar um access point local.
+1. Um computador Lenovo 300e, com Linux instalado, atuando como servidor;
+2. Um computador HP, com Windows 10, atuando como cliente;
+3. Um roteador wireless 300 Mbps TP-LINK TL-WR941ND, configurado para criar um access point local com DHCP.
 
-Na bancada, o computador e o smartphone estão configurados para conexão ao access point por meio de Wi-Fi, sem rede cabeada. O aplicativo Termux está com um ambiente chroot baseado no Ubuntu 22.04 LTS, permitindo a execução do programa Switchboard no telefone de forma transparente.
+Na bancada, ambos computadores estão configurados para conexão ao access point por meio de Wi-Fi, sem rede cabeada.
+
+Durante o teste, foram usadas as duas versões do protocolo Railroad: aquela que utiliza a estratégia de Stop-and-Wait (versão 1) e aquela que utiliza a estratégia de Sliding Window (versão 2). Na metodologia de Sliding Window, o software está configurado para permitir até 64 pacotes de dados na fila de transmissão, e 8 pacotes na janela deslizante. Em ambos os casos, os pacotes são retransmitidos se não forem confirmados em até 500 ms.
+
+Para os benchmarks, foi criado um arquivo de 1 GB no servidor, utilizando o seguinte comando:
+
+```sh
+dd if=/dev/urandom of=1GB.bin bs=1M count=1024
+```
+
+Após a criação do arquivo, foi requisitado, no cliente, o download do arquivo.
+
+Observa-se que, para 1 GB de dados, o tempo de download foi de 24 minutos e 30 segundos na versão 1, e de 15 minutos e 22 segundos na versão 2. Esse tempo é informado pelo cliente após finalizar a transferência. Respectivamente, a taxa de transferência média foi de aproximadamente 0,69 MB/s e 1,2 MB/s.
+
+Além disso, para garantir a integridade do arquivo recebido, foi calculada a hash MD5 do arquivo antes e depois da transferência, e comparada. Foram verificados que as hash são iguais, comprovando que o arquivo foi recebido corretamente.
+
+![Teste de download de 1GB com o Railroad versão 1](./Teste01Download1GBVersao1.png){ width=50% }
+
+![Teste de download de 1GB com o Railroad versão 2](./Teste01Download1GBVersao2.png){ width=50% }
+
+![Verificação da integridade do arquivo de 1GB](./Teste01VerificacaoIntegridade1GB.png){ width=50% }
