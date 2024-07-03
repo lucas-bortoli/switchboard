@@ -264,9 +264,9 @@ Para testes práticos, foi montada uma bancada contendo o seguinte hardware:
 
 ![Ambiente de testes para o projeto](./AmbienteDeTestes.png)
 
-Na bancada, o computador servidor es estão configurados para conexão ao access point por meio de Wi-Fi, e o computador desktop cliente está configurado para conexão cabeada.
+Na bancada, o computador servidor estão configurados para conexão ao access point por meio de Wi-Fi, e o computador desktop cliente está configurado para conexão cabeada.
 
-Durante o teste, foram usadas as duas versões do protocolo Railroad: aquela que utiliza a estratégia de Stop-and-Wait (versão 1) e aquela que utiliza a estratégia de Sliding Window (versão 2). Na metodologia de Sliding Window, o software está configurado para permitir até 64 pacotes de dados na fila de transmissão, e 8 pacotes na janela deslizante. Em ambos os casos, os pacotes são retransmitidos se não forem confirmados em até 500 ms.
+Durante o teste, foram usadas as duas versões do protocolo Railroad: aquela que utiliza a estratégia de Stop-and-Wait e aquela que utiliza a estratégia de Sliding Window. Na metodologia de Sliding Window, o software está configurado para permitir até 64 pacotes de dados na fila de transmissão, e 8 pacotes na janela deslizante. Em ambos os casos, os pacotes são retransmitidos se não forem confirmados em até 500 ms.
 
 Para os benchmarks, foi criado um arquivo de 1 GB no servidor, utilizando o seguinte comando:
 
@@ -276,17 +276,19 @@ dd if=/dev/urandom of=1GB.bin bs=1M count=1024
 
 Após a criação do arquivo, foi requisitado, no cliente, o download do arquivo.
 
-Observa-se que, para 1 GB de dados, o tempo de download foi de 46 minutos e 57 segundos na versão de Sliding Window, e de 1 hora, 11 minutos e 45 segundos na versão Stop-and-Wait. Esse tempo é informado pelo cliente após finalizar a transferência. Respectivamente, a taxa de transferência média foi de aproximadamente 372 KB/s e 243 KB/s.
+Observa-se que, para 1 GB de dados, o tempo de download foi de 46 minutos e 57 segundos na versão de Sliding Window, e de 1 hora, 11 minutos e 45 segundos na versão Stop-and-Wait. Esse tempo é informado pelo cliente após finalizar a transferência. Respectivamente, a taxa de transferência média foi de aproximadamente 372 KB/s e 250KB/s.
 
 |                       | Sliding Window | Stop-and-Wait  |
 |-----------------------|----------------|----------------|
 | Bytes transferidos    | 1073741824     | 1073741824     |
-| Tempo total           | 46 min, 57s    | 1h, 11min, 45s |
-| Taxa de transferência | 372 KB/s       | 243 KB/s       |
+| Tempo total           | 46 min, 57s    | 1h, 11min, 19s |
+| Taxa de transferência | 372 KB/s       | 250 KB/s       |
 
 Além disso, para garantir a integridade do arquivo recebido, foi calculada a hash MD5 do arquivo antes e depois da transferência, e comparada. Foram verificados que as hash são iguais, comprovando que o arquivo foi recebido corretamente.
 
 ![Checksum do arquivo no servidor](./IntegridadeArquivosServidor.png)
+
+![Integridade do arquivo após a transferência via Stop-and-Wait](./SaW_ClienteTransferenciaDownloadTerminado.png)
 
 ![Integridade do arquivo após a transferência via Sliding Window](./SlidingWindow_ClienteTransferenciaDownloadTerminado.png)
 
@@ -296,7 +298,12 @@ Com base nos testes realizados, conclui-se que o protocolo Railroad atendeu às 
 
 ## 6 Referências
 
-- TCP/IP Illustrated, Vol. 1: The Protocols 1st Edition (W. Richard Stevens) -- capítulo 17 (TCP: Transmission Control Protocol), capítulo 18 (TCP Connection Establishment and Termination), capítulo 21 (TCP Timeout and Retransmission)
-- https://en.cppreference.com: referências da linguagem de programação C++ e sua biblioteca padrão, usada principalmente para estudo dos conceitos de threading (`std::thread`, `std::mutex`)
-- https://stackoverflow.com/a/8752870
-- https://stackoverflow.com/a/44896326
+TCP/IP Illustrated, Vol. 1: The Protocols 1st Edition (W. Richard Stevens) -- capítulo 17 (TCP: Transmission Control Protocol), capítulo 18 (TCP Connection Establishment and Termination), capítulo 21 (TCP Timeout and Retransmission)
+
+https://en.cppreference.com -- referências da linguagem de programação C++ e sua biblioteca padrão, usada principalmente para estudo dos conceitos de threading (`std::thread`, `std::mutex`)
+
+https://stackoverflow.com/a/8752870
+
+https://stackoverflow.com/a/44896326
+
+https://linux.die.net/man/2/recv -- documentação da API de sockets TCP, UDP no Linux e outros sistemas POSIX
